@@ -131,7 +131,9 @@ Visualization and analytics platform for metrics, logs, and traces.
 **Configuration**:
 - Admin credentials: `admin/admin`
 - Sidecar for dashboards: Auto-loads dashboards from ConfigMaps
+- Sidecar for datasources: Enabled in `prometheus-stack-values.yaml` to auto-load datasources from ConfigMaps
 - Datasources: Configured via `grafana-datasources.yaml`
+  - **Note**: Only one datasource can be marked as `isDefault: true`. The Helm chart already provides a default Prometheus datasource, so custom datasources should not set this flag.
 
 **Data Sources Configured**:
 1. **Prometheus**: For metrics visualization
@@ -358,6 +360,10 @@ Sample Node.js application with observability instrumentation.
   - `http_request_duration_seconds`: Histogram of request latencies
   - Standard Node.js metrics (via prom-client)
 
+**CORS**:
+- CORS middleware enabled to allow cross-origin requests from frontend
+- Headers: `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+
 **Traces**:
 - OpenTelemetry SDK instrumentation
 - Auto-instrumentation for Express, HTTP, MySQL
@@ -366,8 +372,11 @@ Sample Node.js application with observability instrumentation.
 
 **How Metrics Are Collected**:
 1. Application exposes `/metrics` endpoint
-2. Prometheus scrapes via ServiceMonitor
-3. Metrics appear in Grafana dashboards
+2. **Service must have matching label** (`app: backend`) for ServiceMonitor to discover it
+3. Prometheus scrapes via ServiceMonitor
+4. Metrics appear in Grafana dashboards
+
+**Important**: The backend service must have the label `app: backend` for the ServiceMonitor to discover and scrape it. Without this label, Prometheus won't find the target.
 
 **How Traces Are Collected**:
 1. OpenTelemetry SDK auto-instruments Express/MySQL
@@ -537,6 +546,8 @@ Notification Channels (Slack/Email)
 > 1. Selects services by label (e.g., `app: backend`)
 > 2. Specifies which namespace to look in
 > 3. Defines the endpoint and scrape interval
+> 
+> **Important**: The service itself must have the matching label (`app: backend`) for the ServiceMonitor to discover it. Without this label, Prometheus won't find the target even if the ServiceMonitor is correctly configured.
 > 
 > Prometheus Operator watches for ServiceMonitors and automatically configures Prometheus to scrape those targets. This is declarative and doesn't require manual Prometheus configuration changes."
 
