@@ -40,6 +40,13 @@ spec:
                 buckets: [0.1,0.3,1,2,5]
               });
               
+              expressApp.use((req, res, next) => {
+                res.header('Access-Control-Allow-Origin', '*');
+                res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+                res.header('Access-Control-Allow-Headers', 'Content-Type');
+                next();
+              });
+              
               expressApp.get('/api/hello', async (req,res) => {
                 const end = httpRequestDurationMicroseconds.startTimer();
                 try {

@@ -13,7 +13,6 @@ data:
         type: prometheus
         url: http://prometheus-operated.observability.svc:9090
         access: proxy
-        isDefault: true
       - name: Loki
         type: loki
         url: http://loki.observability.svc:3100

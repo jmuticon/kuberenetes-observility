@@ -27,7 +27,7 @@ grafana:
     dashboards:
       enabled: true
     datasources:
-      enabled: false
+      enabled: true
 
 ingress:
   enabled: false
