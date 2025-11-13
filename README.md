@@ -32,6 +32,21 @@ Add hosts to `/etc/hosts`:
 - **Backend**: Node.js Express API with Prometheus metrics
 - **MySQL**: Database with mysqld-exporter for metrics
 
+## Documentation
+
+This project includes comprehensive documentation for different learning levels:
+
+- **[Quick Start Guide](QUICK_START.md)** - Step-by-step setup instructions for beginners. Perfect for getting started quickly with installation, deployment, and verification.
+
+- **[Kubernetes Guide](KUBERNETES_GUIDE.md)** - Complete explanation of Kubernetes concepts, components, and keywords in plain English. Beginner-friendly yet deep enough for staff engineer interviews. Covers pods, services, deployments, networking, storage, security, and more.
+
+- **[Observability Guide](OBSERVABILITY_GUIDE.md)** - Deep dive into the observability stack (Prometheus, Grafana, Loki, Tempo, OpenTelemetry). Explains the three pillars of observability, data flows, and interview preparation.
+
+**Recommended Learning Path**:
+1. Start with [Quick Start Guide](QUICK_START.md) to get everything running
+2. Read [Kubernetes Guide](KUBERNETES_GUIDE.md) to understand Kubernetes fundamentals
+3. Explore [Observability Guide](OBSERVABILITY_GUIDE.md) to learn about monitoring and observability
+
 ## Quick Start
 
 ### Automated Deployment
