@@ -242,14 +242,92 @@ Common issues:
    ```
 2. Check Prometheus targets (via port-forward to Prometheus UI)
 
-### Grafana Dashboards Not Appearing
-1. Check dashboard ConfigMaps:
+### Frontend API Call Failing (CORS Error)
+
+If the frontend shows "API call failed: TypeError: Failed to fetch":
+
+1. **Verify CORS headers are present**:
+   ```bash
+   curl -v -H "Origin: http://frontend.local" http://api.local/api/hello | grep -i "access-control"
+   ```
+   Should show `Access-Control-Allow-Origin: *`
+
+2. **Check backend pod is running the latest version**:
+   ```bash
+   kubectl get pods -n app -l app=backend
+   kubectl logs -n app -l app=backend --tail=10
+   ```
+
+3. **If CORS headers are missing, restart the backend**:
+   ```bash
+   kubectl rollout restart deployment/backend -n app
+   ```
+
+### Grafana Dashboards Not Appearing or Showing No Data
+
+1. **Check dashboard ConfigMaps**:
    ```bash
    kubectl get configmap -n observability | grep dashboard
    ```
-2. Restart Grafana pod to reload dashboards:
+
+2. **Verify Prometheus is scraping targets**:
+   ```bash
+   kubectl port-forward -n observability svc/prometheus-operated 9090:9090
+   # Open http://localhost:9090/targets in browser
+   # Check if backend target is UP
+   ```
+
+3. **Check if ServiceMonitor is discovering the backend**:
+   ```bash
+   kubectl get servicemonitor -n observability backend-servicemonitor
+   kubectl describe servicemonitor -n observability backend-servicemonitor
+   ```
+
+4. **Verify backend service has the correct label**:
+   ```bash
+   kubectl get svc -n app backend --show-labels
+   # Should show: app=backend
+   ```
+
+5. **Check datasources are configured**:
+   ```bash
+   kubectl get configmap -n observability grafana-datasources -o yaml
+   ```
+
+6. **Restart Grafana pod to reload dashboards**:
    ```bash
    kubectl delete pod -n observability -l app.kubernetes.io/name=grafana
+   ```
+
+7. **Generate some traffic to populate metrics**:
+   ```bash
+   for i in {1..10}; do curl http://api.local/api/hello; sleep 1; done
+   ```
+
+### Prometheus Not Scraping Backend Metrics
+
+1. **Check ServiceMonitor exists and is correct**:
+   ```bash
+   kubectl get servicemonitor -n observability
+   kubectl describe servicemonitor -n observability backend-servicemonitor
+   ```
+
+2. **Verify backend service has required label**:
+   ```bash
+   kubectl get svc -n app backend --show-labels
+   # Must have: app=backend
+   ```
+
+3. **Check backend metrics endpoint is accessible**:
+   ```bash
+   kubectl exec -n app $(kubectl get pods -n app -l app=backend -o jsonpath='{.items[0].metadata.name}') -- curl -s http://localhost:3000/metrics | head -5
+   ```
+
+4. **Check Prometheus targets** (via port-forward to Prometheus UI at http://localhost:9090/targets)
+
+5. **If ServiceMonitor selector doesn't match, update the service**:
+   ```bash
+   kubectl label svc -n app backend app=backend
    ```
 
 ## Project Structure
