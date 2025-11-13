@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: node:18-alpine
+          command: ["sh","-c"]
+          args:
+            - |
+              apk add --no-cache bash curl &&
+              mkdir -p /app && cd /app &&
+              npm init -y &&
+              npm install express prom-client mysql2 @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-http &&
+              cat > /app/server.js <<'EOF'
+              const express = require('express');
+              const client = require('prom-client');
+              const mysql = require('mysql2/promise');
+              const { NodeSDK } = require('@opentelemetry/sdk-node');
+              const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+              const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
+              
+              const expressApp = express();
+              const register = client.register;
+              const httpRequestDurationMicroseconds = new client.Histogram({
+                name: 'http_request_duration_seconds',
+                help: 'Duration of HTTP requests in seconds',
+                labelNames: ['method','route','code'],
+                buckets: [0.1,0.3,1,2,5]
+              });
+              
+              expressApp.get('/api/hello', async (req,res) => {
+                const end = httpRequestDurationMicroseconds.startTimer();
+                try {
+                  const conn = await mysql.createConnection({host: process.env.MYSQL_HOST||'mysql', user: process.env.MYSQL_USER||'root', password: process.env.MYSQL_PASSWORD||'example', database: process.env.MYSQL_DATABASE||'demo'});
+                  const [rows] = await conn.query('SELECT 1 as ok');
+                  await conn.end();
+                } catch (e) {
+                }
+                res.json({message: 'Hello World'});
+                end({method: req.method, route: req.path, code: res.statusCode});
+              });
+              
+              expressApp.get('/metrics', async (req,res) => {
+                res.set('Content-Type', register.contentType);
+                res.end(await register.metrics());
+              });
+              
+              const port = 3000;
+              expressApp.listen(port, () => console.log('Listening', port));
+              EOF
+              node /app/server.js
+          env:
+            - name: MYSQL_HOST
+              value: mysql
+            - name: MYSQL_USER
+              value: root
+            - name: MYSQL_PASSWORD
+              value: example
+            - name: MYSQL_DATABASE
+              value: demo
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4318
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+

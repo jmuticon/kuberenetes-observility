@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-mysql
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  mysql-dashboard.json: |
+    {
+      "title": "MySQL Metrics",
+      "tags": ["mysql", "database"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "id": 1,
+          "title": "MySQL Up",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "mysql_up",
+              "legendFormat": "MySQL Status",
+              "datasource": {"type": "prometheus", "uid": "prometheus"}
+            }
+          ],
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+        },
+        {
+          "id": 2,
+          "title": "MySQL Connections",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "mysql_global_status_threads_connected",
+              "legendFormat": "Connected Threads",
+              "datasource": {"type": "prometheus", "uid": "prometheus"}
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+        },
+        {
+          "id": 3,
+          "title": "MySQL Queries",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(mysql_global_status_queries[5m])",
+              "legendFormat": "Queries/sec",
+              "datasource": {"type": "prometheus", "uid": "prometheus"}
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 27,
+      "version": 1
+    }
+

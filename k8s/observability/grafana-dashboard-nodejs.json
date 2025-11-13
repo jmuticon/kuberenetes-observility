@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-nodejs
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  nodejs-dashboard.json: |
+    {
+      "title": "Node.js Backend Metrics",
+      "tags": ["nodejs", "backend"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "id": 1,
+          "title": "HTTP Request Duration (95th percentile)",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "95th percentile",
+              "datasource": {"type": "prometheus", "uid": "prometheus"}
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+        },
+        {
+          "id": 2,
+          "title": "HTTP Request Rate",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(http_request_duration_seconds_count[5m])",
+              "legendFormat": "{{method}} {{route}}",
+              "datasource": {"type": "prometheus", "uid": "prometheus"}
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 27,
+      "version": 1
+    }
+

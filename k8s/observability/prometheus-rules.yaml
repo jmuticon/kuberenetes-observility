@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-alert-rules
+  namespace: observability
+spec:
+  groups:
+    - name: demo.rules
+      rules:
+        - alert: BackendHighLatency
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High API latency (95th percentile > 1s)"
+        - alert: MySQLDown
+          expr: absent(mysql_up) or mysql_up == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "MySQL appears to be down"
+
