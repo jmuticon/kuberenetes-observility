@@ -119,12 +119,17 @@ This directory contains detailed documentation for each YAML file in the Kuberne
 3. Collector forwards traces to Tempo
 4. Grafana queries Tempo for trace visualization
 
+## Comprehensive Guides
+
+- **[observability-components-datadog.md](observability-components-datadog.md)** - Complete guide explaining all observability layers (Metrics, Logs, Traces, Aggregator, Visualization, Alerts) with detailed Datadog implementation
+
 ## Getting Started
 
 1. **Read the application components** to understand the demo application
 2. **Read the observability components** to understand the monitoring stack
 3. **Review the architecture** to see how everything connects
 4. **Check individual documentation** for specific configuration details
+5. **Read the comprehensive Datadog guide** to understand how to achieve observability with Datadog
 
 ## Key Concepts
 
